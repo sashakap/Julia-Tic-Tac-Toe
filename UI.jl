@@ -1,7 +1,5 @@
 using PlotlyJS, WebIO, Blink, Images, Colors
 
-
-function makeBoard()
     trace = scatter(
         x = [.5, 1.5, 2.5, .5, 1.5, 2.5,.5, 1.5, 2.5],
         y = [.5, .5, .5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5],
@@ -33,32 +31,22 @@ function makeBoard()
             automargin=true
         ),
     )
-    p
-end
+    
+p = plot(trace, layout)
 
-function makeGrid(plot)
-    add_shape!(p, line(
-        x0=0, y0=1,
-        x1=3, y1=1,
-        line=attr(color="Black", width=5),
-    )), 
+on(p["click"]) do data
+    color_vec = (fill("red", 10), fill("blue", 10))
+    for i in d
+        color_vec[i[1]][i[2]] = "gold"
+    end
+    symbols = (fill("circle", 10), fill("circle", 10))
+    for point in data["points"]
+        color_vec[point["curveNumber"] + 1][point["pointIndex"] + 1] = "gold"
+        push!(d, (point["curveNumber"] + 1,point["pointIndex"] + 1) )
+        symbols[point["curveNumber"] + 1][point["pointIndex"] + 1] = "X"
+    end
+    restyle!(p, marker_color=color_vec, marker_symbol=symbols)
+    end
+    
 
-    add_shape!(p, line(
-        x0=0, y0=2,
-        x1=3, y1=2,
-        line=attr(color="Black", width=5),
-    )), 
-
-    add_shape!(p, line(
-        x0=2, y0=3,
-        x1=2, y1=0,
-        line=attr(color="Black", width=5),
-    )), 
-
-    add_shape!(p, line(
-        x0=1, y0=3,
-        x1=1, y1=0,
-        line=attr(color="Black", width=5),
-    ))
-
-end
+PlotlyJS.display_blink(p)
