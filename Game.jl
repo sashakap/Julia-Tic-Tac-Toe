@@ -16,20 +16,13 @@ function printBoard(GameBoard::Array{Int})
     return s
 end
 
-function playerMove(GameBoard::Array{Int})
-    while(true)
-        println("What row?")
-        row = readline()
-        row = parse(Int, row)
+#=
 
-        println("Which place?")
-        column = readline()
-        column = parse(Int, column)
-        println()
-        
-        if GameBoard[row,column] == 0
-          GameBoard[row,column] = 1
-          playerCooridantes = [row,column]
+function playerMove(GameBoard::Array{Int}, space)
+    while(true)
+        if GameBoard[space] == 0
+          GameBoard[space] = 1
+          playerCooridantes = [space]
           return playerCooridantes
           break
         else
@@ -39,6 +32,7 @@ function playerMove(GameBoard::Array{Int})
         end
     end
 end
+=#
 
 function computerMove(GameBoard::Array{Int})
     while(true)
@@ -113,6 +107,8 @@ function checkWin(GameBoard::Array{Int}, identifier)
         return 0
     end
 end
+
+
 
 function game()
     touch("results.txt")

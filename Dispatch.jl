@@ -1,15 +1,17 @@
 using PlotlyJS, WebIO, Blink, Images, Colors
 
 include("Game.jl")
-#include("UI.jl")
 
-color_defualt = colorant"rgb(229,236,246)"
+iterator = 1
 
 trace = scatter(
-    x = [.5, 1.5, 2.5, .5, 1.5, 2.5,.5, 1.5, 2.5],
-    y = [.5, .5, .5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5],
+    x = [0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5],
+    y = [2.5, 1.5, 0.5, 2.5, 1.5, 0.5, 2.5, 1.5, 0.5],
     mode = "markers",
-    marker=attr(size=100, color=color_defualt, symbol=("sqaure",))
+    xaxis_showgrid=false, 
+    yaxis_showgrid=false,
+    marker=attr(size=100, color="SKYBLUE"),
+    title = "Tic-Tac-Toe",
 )
 
 layout = Layout(    
@@ -17,6 +19,7 @@ layout = Layout(
     width = 500,
     height = 500,
     scrollZoom=false,
+    bgcolor = "white",
 
     xaxis = attr(
         title_text = "Columns",    
@@ -36,115 +39,99 @@ layout = Layout(
 )
 
 p = plot(trace, layout)
-PlotlyJS.display_blink(p)
 
+add_shape!(p, line(
+    x0=1, y0=0,
+    x1=1, y1=3,
+    line=attr(color="Black", width=5),
+))
 
+add_shape!(p, line(
+    x0=2, y0=0,
+    x1=2, y1=3,
+    line=attr(color="Black", width=5),
+))
 
-function game()
-    touch("results.txt")
-    println("Would you like to go 1st or 2nd(type in 1 or 2)")
-    turn = readline()
-    turn = parse(Int, turn)
-    if turn == 1
-        println("You're going first")
-    else
-        println("You're going second")
-    end
+add_shape!(p, line(
+    x0=0, y0=2,
+    x1=3, y1=2,
+    line=attr(color="Black", width=5),
+))
 
+add_shape!(p, line(
+    x0=0, y0=1,
+    x1=3, y1=1,
+    line=attr(color="Black", width=5),
+))
     
 
-    println("You will be \"X\"")
 
-    GameBoard = zeros(Int, 3, 3)
+GameBoard = zeros(Int, 3, 3)
 
-    print(printBoard(GameBoard))
-    for i in 0:7
-        if turn == 1
-            playerCooridinants = playerMove(GameBoard) #Player Move
-            println(printBoard(GameBoard))
+color_vec = (fill("lightskyblue", 10), fill("blue", 10))
+symbols = (fill("circle", 10), fill("circle", 10))
 
-            if checkWin(GameBoard,1) == 1
-                println("You Win!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Won!")
-                    close(file)
+d1 = []
+d2 = []
+
+on(p["click"]) do data
+    global iterator
+
+    color_vec = (fill("lightskyblue", 10), fill("blue", 10))
+    symbols = (fill("circle", 10), fill("circle", 10))
+    for i in d1
+        color_vec[i[1]][i[2]] = "black"
+        symbols[i[1]][i[2]] = "x"
+    end
+        
+    for i in d2
+        color_vec[i[1]][i[2]] = "black"
+        symbols[i[1]][i[2]] = "circle-open"
+    end
+        
+    for point in data["points"]
+        
+        if iterator %2 == 1
+            if GameBoard[point["pointIndex"] + 1] != 0
+                println("Invalid Move, try Again")
+            else
+                color_vec[point["curveNumber"] + 1][point["pointIndex"] + 1] = "black"
+                symbols[point["curveNumber"] + 1][point["pointIndex"] + 1] = "x"
+                push!(d1, (point["curveNumber"] + 1,point["pointIndex"] + 1) )
+                GameBoard[point["pointNumber"]+1] = 1
+                restyle!(p, marker_color=color_vec, marker_symbol=symbols)
+                if checkWin(GameBoard, 1) == true
+                    println("X Wins!")
+                    savefig(p,"Resuls.png")
+                    return;
+                elseif checkWin(GameBoard, 1) == false
+                    println("It's a tie")
+                    savefig(p,"Resuls.png")
+                    return;
                 end
-                break
-            elseif checkWin(GameBoard,1) == 0
-                println("It's a tie! Try again!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Tied!")
-                    close(file)
-                end
-                break
             end
-
-            aiCoordinants = computerMove(GameBoard) #Computer Move
-            GameBoard[aiCoordinants[1], aiCoordinants[2]] = 2
-            println(printBoard(GameBoard))
-
-            if checkWin(GameBoard,2) == 1
-                println("You lose")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Lost!")
-                    close(file)
-                end
-                break
-            elseif checkWin(GameBoard,2) == 0
-                println("It's a tie! Try again!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Tied!")
-                    close(file)
-                end
-                break
+            randomNumber = rand(1:9)
+            while GameBoard[randomNumber] != 0
+                randomNumber = rand(1:9)
             end
+            color_vec[point["curveNumber"] + 1][(point["pointIndex"] - point["pointIndex"]) + randomNumber] = "black"
+            symbols[point["curveNumber"] + 1][(point["pointIndex"] - point["pointIndex"]) + randomNumber] = "circle-open"
+            push!(d2, (point["curveNumber"] + 1,(point["pointIndex"] - point["pointIndex"]) + randomNumber) )
+            GameBoard[randomNumber] = 2
+            restyle!(p, marker_color=color_vec, marker_symbol=symbols)
 
-            i+=1
-
-        else
-            aiCoordinants = computerMove(GameBoard) #Computer Move
-            GameBoard[aiCoordinants[1], aiCoordinants[2]] = 2
-            print(printBoard(GameBoard))
-            
-            if checkWin(GameBoard,2) == true
-                println("You lose")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Lost!")
-                    close(file)
-                end
-                break
-            elseif checkWin(GameBoard,2) == 0
-                println("It's a tie! Try again!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Tied!")
-                    close(file)
-                end
-                break
+            if checkWin(GameBoard, 2) == true
+                println("O Wins!")
+                savefig(p,"Resuls.png")
+                return;
+            elseif checkWin(GameBoard, 2) == false
+                println("It's a tie")
+                savefig(p,"Resuls.png")
+                return;
             end
-
-            playerCooridinants = playerMove(GameBoard) #Player Move
-            print(printBoard(GameBoard))
-           
-            if checkWin(GameBoard,1) == 1
-                println("You Win!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Won!")
-                    close(file)
-                end
-                break
-            elseif checkWin(GameBoard,1) == 0
-                println("It's a tie! Try again!")
-                open("results.txt", "w") do file
-                    write(file, printBoard(GameBoard)*"You Tied!")
-                    close(file)
-                end
-                break
-            end
-            i+=1
-
         end
+        iterator+=1 
     end
-    
-    println("The game is over! Go to \"results.txt\" to check out the the final board")
-    
-end 
+end
+println()
+PlotlyJS.display_blink(p)
