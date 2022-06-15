@@ -1,6 +1,7 @@
 using PlotlyJS, WebIO, Blink, Images, Colors
 
 include("Game.jl")
+include("Minimax.jl")
 
 iterator = 1
 
@@ -63,6 +64,30 @@ add_shape!(p, line(
     x1=3, y1=1,
     line=attr(color="Black", width=5),
 ))
+
+add_shape!(p, line(
+    x0=0, y0=0,
+    x1=0, y1=3,
+    line=attr(color="Black", width=5),
+))
+
+add_shape!(p, line(
+    x0=3, y0=0,
+    x1=0, y1=0,
+    line=attr(color="Black", width=5),
+))
+
+add_shape!(p, line(
+    x0=0, y0=3,
+    x1=3, y1=3,
+    line=attr(color="Black", width=5),
+))
+
+add_shape!(p, line(
+    x0=3, y0=3,
+    x1=3, y1=0,
+    line=attr(color="Black", width=5),
+))
     
 
 
@@ -73,6 +98,32 @@ symbols = (fill("circle", 10), fill("circle", 10))
 
 d1 = []
 d2 = []
+
+function makeMove(board::Array{Int})
+
+    bestmove = findBestMove(board)
+
+    if bestmove == (3,3)
+        return 9
+    elseif bestmove == (3,2)
+        return 8
+    elseif bestmove == (3,1)
+        return 7
+    elseif bestmove == (2,3)
+        return 6
+    elseif bestmove == (2,2)
+        return 5
+    elseif bestmove == (2,1)
+        return 4
+    elseif bestmove == (1,3)
+        return 3
+    elseif bestmove == (1,2)
+        return 2
+    elseif bestmove == (1,1)
+        return 1
+    end
+
+end
 
 on(p["click"]) do data
     global iterator
@@ -102,7 +153,7 @@ on(p["click"]) do data
                 restyle!(p, marker_color=color_vec, marker_symbol=symbols)
                 if checkWin(GameBoard, 1) == true
                     println("X Wins!")
-                    savefig(p,"Resuls.png")
+                    savefig(p, "Resuls.png")
                     return;
                 elseif checkWin(GameBoard, 1) == false
                     println("It's a tie")
@@ -110,10 +161,9 @@ on(p["click"]) do data
                     return;
                 end
             end
-            randomNumber = rand(1:9)
-            while GameBoard[randomNumber] != 0
-                randomNumber = rand(1:9)
-            end
+
+            randomNumber = makeMove(GameBoard)
+            
             color_vec[point["curveNumber"] + 1][(point["pointIndex"] - point["pointIndex"]) + randomNumber] = "black"
             symbols[point["curveNumber"] + 1][(point["pointIndex"] - point["pointIndex"]) + randomNumber] = "circle-open"
             push!(d2, (point["curveNumber"] + 1,(point["pointIndex"] - point["pointIndex"]) + randomNumber) )
@@ -122,7 +172,7 @@ on(p["click"]) do data
 
             if checkWin(GameBoard, 2) == true
                 println("O Wins!")
-                savefig(p,"Resuls.png")
+                savefig(p, "Resuls.png",)
                 return;
             elseif checkWin(GameBoard, 2) == false
                 println("It's a tie")
